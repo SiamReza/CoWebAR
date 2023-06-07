@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Video Streaming Example — Networked-Aframe</title>
+    <meta
+      name="description"
+      content="Video Streaming Example — Networked-Aframe"
+    />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.5.0/socket.io.slim.js"></script>
+    <script src="/easyrtc/easyrtc.js"></script>
+    <script src="/dist/networked-aframe.js"></script>
+    <script>
+      // see issue https://github.com/networked-aframe/networked-aframe/issues/267
+      NAF.schemas.getComponentsOriginal = NAF.schemas.getComponents;
+      NAF.schemas.getComponents = (template) => {
+        if (!NAF.schemas.hasTemplate("#avatar-template")) {
+          NAF.schemas.add({
+            template: "#avatar-template",
+            components: ["position", "rotation"],
+          });
+        }
+        const components = NAF.schemas.getComponentsOriginal(template);
+        return components;
+      };
+    </script>
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
+    <script src="/js/spawn-in-circle.component.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+  </head>
+  <body>
+    <a-scene
+      networked-scene="
+      room: basic-video;
+      debug: true;
+      adapter: easyrtc;
+      audio: true;
+      video: true;
+    "
+    >
+      <a-assets>
+        <!-- Templates -->
+
+        <!-- Avatar -->
+        <template id="avatar-template">
+          <a-entity class="avatar" networked-audio-source>
+           <a-plane
+              id="video-box1"
+              visible="true"
+              color="#FFF"
+              width="5"
+              height="4"
+              position="0 .6 -10"
+              material="side: front"
+              networked-video-source
+            ></a-plane>
+            <a-plane
+              id="video-box2"
+              visible="true"
+              color="#FFF"
+              width="5"
+              height="4"
+              position="0 .6 10"
+              material="side: back"
+              networked-video-source
+            ></a-plane>
+          </a-entity>
+        </template>
+
+        <!-- /Templates -->
+      </a-assets>
+
+      <a-entity id="rig">
+        <a-entity
+          id="player"
+          networked="template:#avatar-template;attachTemplateToLocal:false;"
+          camera
+          position="0 1.6 0"
+          wasd-controls
+          
+        >
+          
+        </a-entity>
+      </a-entity>
+
+      <!--       <a-entity environment="preset:arches"></a-entity>
+      <a-entity light="type:ambient;intensity:0.5"></a-entity> -->
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <div class="actions">
+      <a href="test.html">
+      <button id="camera-btn" type="button" class="button" onclick="off()">
+        streaming off
+      </button>
+              </a>
+  
+      
+      
+      <!--       <button id="camera-btn" type="button" class="button">Hide Camera</button> -->
+      <button id="mic-btn" type="button" class="button">Audio off</button>
+      
+    </div>
+        <script>
+      
+
+      function off() {
+        let cameraEnabled = true;
+
+        document.getElementById("video-box1").setAttribute("visible", false);
+        document.getElementById("video-box2").setAttribute("visible", false);
+
+        NAF.connection.adapter.enableCamera(!cameraEnabled);
+        //         cameraEnabled = !cameraEnabled;
+      }
+      function on() {
+        let cameraEnabled = false;
+
+        document.getElementById("video-box1").setAttribute("visible", true);
+        document.getElementById("video-box2").setAttribute("visible", true);
+
+        NAF.connection.adapter.enableCamera(!cameraEnabled);
+        //           cameraEnabled = !cameraEnabled;
+      }
+    
+    </script>
+    <script>
+      // Mic status
+      let micEnabled = true;
+      // Mic button element
+      const micBtnEle = document.getElementById("mic-btn");
+
+      // Called by Networked-Aframe when connected to server
+      function onConnect() {
+        console.log("onConnect", new Date());
+
+        // Handle mic button click (Mute and Unmute)
+        micBtnEle.addEventListener("click", function () {
+          NAF.connection.adapter.enableMicrophone(!micEnabled);
+          micEnabled = !micEnabled;
+          micBtnEle.textContent = micEnabled ? "Audio off" : "Audio on";
+        });
+      }
+    </script>
+  </body>
+</html>

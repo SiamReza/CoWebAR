@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Video Streaming Example — Networked-Aframe</title>
+    <meta
+      name="description"
+      content="Video Streaming Example — Networked-Aframe"
+    />
+
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.5.0/socket.io.slim.js"></script>
+    <script src="/easyrtc/easyrtc.js"></script>
+    <script src="/dist/networked-aframe.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script>
+      // see issue https://github.com/networked-aframe/networked-aframe/issues/267
+      NAF.schemas.getComponentsOriginal = NAF.schemas.getComponents;
+      NAF.schemas.getComponents = (template) => {
+        if (!NAF.schemas.hasTemplate("#avatar-template")) {
+          NAF.schemas.add({
+            template: "#avatar-template",
+            components: ["position", "rotation"],
+          });
+        }
+        const components = NAF.schemas.getComponentsOriginal(template);
+        return components;
+      };
+    </script>
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
+    <script src="/js/spawn-in-circle.component.js"></script>
+    <script src="/js/spawn-grid.component.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+  </head>
+  <body>
+    <a-scene
+      networked-scene="
+      room: basic-video;
+      debug: true;
+      adapter: easyrtc;
+      audio: true;
+      video: false;
+    "
+      ,
+      embedded
+      arjs=" detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65;"
+    >
+      <a-marker type="barcode" value="1">
+        <a-box position="0 0.5 0" color="yellow"></a-box>
+      </a-marker>
+
+      <a-marker type="barcode" value="2">
+        <a-box position="0 0.5 0" color="red"></a-box>
+      </a-marker>
+
+      <a-marker type="barcode" value="3">
+        <a-box position="0 0.5 0" color="blue"></a-box>
+      </a-marker>
+
+      <a-assets>
+        <!-- Templates -->
+
+        <!-- Avatar -->
+        <template id="avatar-template">
+          <a-entity class="avatar" networked-audio-source>
+
+          </a-entity>
+        </template>
+
+        <!-- /Templates -->
+      </a-assets>
+
+      <a-entity id="rig">
+
+      </a-entity>
+
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <div class="actions">
+      <a href="video-stream.html">
+        <button id="camera-btn2" type="button" class="button" onclick="on()">
+          streaming on
+        </button>
+      </a>
+
+      <button id="mic-btn" type="button" class="button">Audio off</button>
+    </div>
+
+    <script>
+      // Mic status
+      let micEnabled = true;
+      // Mic button element
+      const micBtnEle = document.getElementById("mic-btn");
+
+      // Called by Networked-Aframe when connected to server
+      function onConnect() {
+        console.log("onConnect", new Date());
+
+        // Handle mic button click (Mute and Unmute)
+        micBtnEle.addEventListener("click", function () {
+          NAF.connection.adapter.enableMicrophone(!micEnabled);
+          micEnabled = !micEnabled;
+          micBtnEle.textContent = micEnabled ? "Audio off" : "Audio on";
+        });
+      }
+    </script>
+  </body>
+</html>
